@@ -1,0 +1,55 @@
+package com.eventledger.service;
+
+import com.eventledger.domain.Event;
+import com.eventledger.repository.EventRepository;
+import com.eventledger.web.dto.CreateEventRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Application service for ingesting and recording ledger events.
+ */
+@Service
+public class EventService {
+
+    private final EventRepository repository;
+
+    public EventService(EventRepository repository) {
+        this.repository = repository;
+    }
+
+    /**
+     * Idempotently records an event.
+     *
+     * <p>If an event with the same {@code eventId} already exists, the original is returned
+     * unchanged and nothing is written &mdash; so re-delivery of the same event never duplicates a
+     * row or moves the balance. Otherwise the event is persisted as new.
+     *
+     * @return the stored event together with whether this call created it
+     */
+    @Transactional
+    public SubmissionResult submit(CreateEventRequest request) {
+        return repository.findByEventId(request.eventId())
+                .map(existing -> new SubmissionResult(existing, false))
+                .orElseGet(() -> new SubmissionResult(repository.save(toEntity(request)), true));
+    }
+
+    private static Event toEntity(CreateEventRequest request) {
+        return new Event(
+                request.eventId(),
+                request.accountId(),
+                request.type(),
+                request.amount(),
+                request.currency(),
+                request.eventTimestamp(),
+                request.metadata()
+        );
+    }
+
+    /**
+     * Outcome of a submission: the canonical stored event and whether it was newly created
+     * ({@code true}) versus returned as an existing duplicate ({@code false}).
+     */
+    public record SubmissionResult(Event event, boolean created) {
+    }
+}
