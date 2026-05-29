@@ -3,8 +3,11 @@ package com.eventledger.service;
 import com.eventledger.domain.Event;
 import com.eventledger.repository.EventRepository;
 import com.eventledger.web.dto.CreateEventRequest;
+import com.eventledger.web.error.EventNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * Application service for ingesting and recording ledger events.
@@ -32,6 +35,27 @@ public class EventService {
         return repository.findByEventId(request.eventId())
                 .map(existing -> new SubmissionResult(existing, false))
                 .orElseGet(() -> new SubmissionResult(repository.save(toEntity(request)), true));
+    }
+
+    /**
+     * Retrieves a single event by its {@code eventId}.
+     *
+     * @throws EventNotFoundException if no event with that id exists
+     */
+    @Transactional(readOnly = true)
+    public Event getByEventId(String eventId) {
+        return repository.findByEventId(eventId)
+                .orElseThrow(() -> new EventNotFoundException(eventId));
+    }
+
+    /**
+     * Lists every event for an account in chronological order by {@code eventTimestamp}
+     * (tie-broken by {@code eventId}), regardless of the order events were received. An account
+     * with no events yields an empty list.
+     */
+    @Transactional(readOnly = true)
+    public List<Event> listByAccount(String accountId) {
+        return repository.findByAccountIdOrderByEventTimestampAscEventIdAsc(accountId);
     }
 
     private static Event toEntity(CreateEventRequest request) {
