@@ -4,6 +4,7 @@ import com.eventledger.service.EventService;
 import com.eventledger.service.EventService.SubmissionResult;
 import com.eventledger.web.dto.CreateEventRequest;
 import com.eventledger.web.dto.EventResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,7 +38,7 @@ public class EventController {
      * unchanged). Both responses carry a {@code Location} header pointing at the canonical event.
      */
     @PostMapping
-    public ResponseEntity<EventResponse> submit(@RequestBody CreateEventRequest request) {
+    public ResponseEntity<EventResponse> submit(@Valid @RequestBody CreateEventRequest request) {
         SubmissionResult result = eventService.submit(request);
         EventResponse body = EventResponse.from(result.event());
         URI location = URI.create("/events/" + body.eventId());
