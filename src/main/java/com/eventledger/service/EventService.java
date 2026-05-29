@@ -7,6 +7,7 @@ import com.eventledger.web.error.EventNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -56,6 +57,15 @@ public class EventService {
     @Transactional(readOnly = true)
     public List<Event> listByAccount(String accountId) {
         return repository.findByAccountIdOrderByEventTimestampAscEventIdAsc(accountId);
+    }
+
+    /**
+     * Computes the net balance for an account: {@code sum(CREDIT) - sum(DEBIT)}. An account with no
+     * events returns {@code 0}. Correct regardless of the order events arrived in.
+     */
+    @Transactional(readOnly = true)
+    public BigDecimal getBalance(String accountId) {
+        return repository.computeBalance(accountId);
     }
 
     private static Event toEntity(CreateEventRequest request) {
