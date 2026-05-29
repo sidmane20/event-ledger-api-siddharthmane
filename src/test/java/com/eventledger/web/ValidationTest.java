@@ -109,6 +109,23 @@ class ValidationTest {
     }
 
     @Test
+    void amountWithMoreThanTwoDecimals_returns400() throws Exception {
+        String body = """
+                {
+                  "eventId": "evt-1",
+                  "accountId": "acct-1",
+                  "type": "CREDIT",
+                  "amount": 10.123,
+                  "currency": "USD",
+                  "eventTimestamp": "2026-05-15T10:00:00Z"
+                }
+                """;
+        postEvent(body)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[?(@.field == 'amount')]").exists());
+    }
+
+    @Test
     void malformedJson_returns400() throws Exception {
         postEvent("{ this is not valid json ")
                 .andExpect(status().isBadRequest())

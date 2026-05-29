@@ -56,6 +56,29 @@ class EventRetrievalTest {
     }
 
     @Test
+    void amount_isAlwaysRenderedWithTwoDecimals() throws Exception {
+        // Submit a whole-number amount; it must come back as 10.00, not 10 or 10.0.
+        String body = """
+                {
+                  "eventId": "evt-money",
+                  "accountId": "acct-1",
+                  "type": "CREDIT",
+                  "amount": 10,
+                  "currency": "USD",
+                  "eventTimestamp": "2026-05-15T10:00:00Z"
+                }
+                """;
+        mockMvc.perform(post("/events").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated());
+
+        String json = mockMvc.perform(get("/events/evt-money"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        org.assertj.core.api.Assertions.assertThat(json).contains("\"amount\":10.00");
+    }
+
+    @Test
     void getById_returns404_whenMissing() throws Exception {
         mockMvc.perform(get("/events/does-not-exist"))
                 .andExpect(status().isNotFound());

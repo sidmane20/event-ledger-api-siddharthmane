@@ -1,6 +1,7 @@
 package com.eventledger.web.dto;
 
 import com.eventledger.domain.EventType;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -36,6 +37,7 @@ public record CreateEventRequest(
 
         @NotNull(message = "amount is required")
         @Positive(message = "amount must be greater than 0")
+        @Digits(integer = 17, fraction = 2, message = "amount supports at most 2 decimal places")
         BigDecimal amount,
 
         @NotBlank(message = "currency is required")

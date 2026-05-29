@@ -2,6 +2,7 @@ package com.eventledger.web;
 
 import com.eventledger.service.EventService;
 import com.eventledger.web.dto.BalanceResponse;
+import com.eventledger.web.support.Money;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +27,6 @@ public class AccountController {
      */
     @GetMapping("/{accountId}/balance")
     public BalanceResponse balance(@PathVariable String accountId) {
-        return new BalanceResponse(accountId, eventService.getBalance(accountId));
+        return new BalanceResponse(accountId, Money.scale(eventService.getBalance(accountId)));
     }
 }

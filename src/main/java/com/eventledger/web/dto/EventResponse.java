@@ -2,6 +2,7 @@ package com.eventledger.web.dto;
 
 import com.eventledger.domain.Event;
 import com.eventledger.domain.EventType;
+import com.eventledger.web.support.Money;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -29,7 +30,7 @@ public record EventResponse(
                 event.getEventId(),
                 event.getAccountId(),
                 event.getType(),
-                event.getAmount(),
+                Money.scale(event.getAmount()),
                 event.getCurrency(),
                 event.getEventTimestamp(),
                 event.getMetadata(),

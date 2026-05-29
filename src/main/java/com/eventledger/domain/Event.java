@@ -55,7 +55,7 @@ public class Event {
     @Column(name = "type", nullable = false, length = 16, updatable = false)
     private EventType type;
 
-    @Column(name = "amount", nullable = false, precision = 19, scale = 4, updatable = false)
+    @Column(name = "amount", nullable = false, precision = 19, scale = 2, updatable = false)
     private BigDecimal amount;
 
     @Column(name = "currency", nullable = false, length = 3, updatable = false)
