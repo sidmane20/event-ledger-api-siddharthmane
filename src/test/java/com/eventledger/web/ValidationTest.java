@@ -153,4 +153,14 @@ class ValidationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.title").value("Missing parameter"));
     }
+
+    @Test
+    void unmappedPath_returns404_not500() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("Not found"));
+
+        mockMvc.perform(get("/totally/unmapped/path"))
+                .andExpect(status().isNotFound());
+    }
 }
