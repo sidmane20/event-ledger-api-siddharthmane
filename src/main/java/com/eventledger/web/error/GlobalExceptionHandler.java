@@ -1,5 +1,6 @@
 package com.eventledger.web.error;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -48,6 +49,15 @@ public class GlobalExceptionHandler {
                 "Request body is malformed or contains an invalid value "
                         + "(e.g. unknown event type or an invalid timestamp).");
         problem.setTitle("Malformed request");
+        return problem;
+    }
+
+    /** Invalid query-parameter values (e.g. a negative {@code page} or out-of-range {@code size}). */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ProblemDetail handleConstraintViolation(ConstraintViolationException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Invalid request parameter");
         return problem;
     }
 

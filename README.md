@@ -114,10 +114,26 @@ curl http://localhost:8080/events/evt-001
 ### `GET /events?account={accountId}` — list an account's events
 
 Always returned **in chronological order by `eventTimestamp`** (ties broken by `eventId`),
-regardless of the order events were received. An unknown account returns an empty list.
+regardless of the order events were received. An unknown account returns an empty page.
+
+**Pagination** (optional): `page` (0-based, default `0`) and `size` (default `50`, max `200`). The
+sort is fixed server-side so paging never weakens the ordering guarantee. Invalid values return
+`400`. The response is an envelope with the page content plus navigation metadata:
 
 ```bash
-curl "http://localhost:8080/events?account=acct-123"
+curl "http://localhost:8080/events?account=acct-123&page=0&size=50"
+```
+
+```json
+{
+  "content": [ /* EventResponse objects, chronological */ ],
+  "page": 0,
+  "size": 50,
+  "totalElements": 2,
+  "totalPages": 1,
+  "first": true,
+  "last": true
+}
 ```
 
 ### `GET /accounts/{accountId}/balance` — net balance

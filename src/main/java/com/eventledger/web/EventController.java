@@ -4,8 +4,12 @@ import com.eventledger.service.EventService;
 import com.eventledger.service.EventService.SubmissionResult;
 import com.eventledger.web.dto.CreateEventRequest;
 import com.eventledger.web.dto.EventResponse;
+import com.eventledger.web.dto.PagedEventsResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,14 +19,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
-import java.util.List;
 
 /**
  * REST endpoints for submitting and retrieving transaction events.
  */
 @RestController
 @RequestMapping("/events")
+@Validated
 public class EventController {
+
+    /** Upper bound on page size, to keep responses bounded. */
+    private static final int MAX_PAGE_SIZE = 200;
 
     private final EventService eventService;
 
@@ -57,12 +64,14 @@ public class EventController {
 
     /**
      * List events for an account, always ordered chronologically by {@code eventTimestamp}
-     * regardless of arrival order. An unknown account yields an empty list (not a 404).
+     * regardless of arrival order. Results are paginated via {@code page} (0-based) and {@code size};
+     * an unknown account yields an empty page (not a 404).
      */
     @GetMapping
-    public List<EventResponse> listByAccount(@RequestParam("account") String accountId) {
-        return eventService.listByAccount(accountId).stream()
-                .map(EventResponse::from)
-                .toList();
+    public PagedEventsResponse listByAccount(
+            @RequestParam("account") String accountId,
+            @RequestParam(value = "page", defaultValue = "0") @Min(0) int page,
+            @RequestParam(value = "size", defaultValue = "50") @Min(1) @Max(MAX_PAGE_SIZE) int size) {
+        return PagedEventsResponse.from(eventService.listByAccount(accountId, page, size));
     }
 }

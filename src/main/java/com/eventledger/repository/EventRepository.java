@@ -1,6 +1,8 @@
 package com.eventledger.repository;
 
 import com.eventledger.domain.Event;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,6 +30,13 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     boolean existsByEventId(String eventId);
 
     List<Event> findByAccountIdOrderByEventTimestampAscEventIdAsc(String accountId);
+
+    /**
+     * Paginated listing for an account. Ordering is supplied by the {@link Pageable}'s {@code Sort}
+     * (fixed to {@code eventTimestamp, eventId} by the service) so chronological order is preserved
+     * across pages regardless of arrival order.
+     */
+    Page<Event> findByAccountId(String accountId, Pageable pageable);
 
     /**
      * Net balance for an account: {@code sum(CREDIT) - sum(DEBIT)}.

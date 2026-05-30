@@ -4,11 +4,14 @@ import com.eventledger.domain.Event;
 import com.eventledger.repository.EventRepository;
 import com.eventledger.web.dto.CreateEventRequest;
 import com.eventledger.web.error.EventNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * Application service for ingesting and recording ledger events.
@@ -50,13 +53,16 @@ public class EventService {
     }
 
     /**
-     * Lists every event for an account in chronological order by {@code eventTimestamp}
-     * (tie-broken by {@code eventId}), regardless of the order events were received. An account
-     * with no events yields an empty list.
+     * Lists events for an account, one page at a time, in chronological order by
+     * {@code eventTimestamp} (tie-broken by {@code eventId}) regardless of arrival order. The sort
+     * is fixed here so a client cannot weaken the ordering guarantee. An account with no events
+     * yields an empty page.
      */
     @Transactional(readOnly = true)
-    public List<Event> listByAccount(String accountId) {
-        return repository.findByAccountIdOrderByEventTimestampAscEventIdAsc(accountId);
+    public Page<Event> listByAccount(String accountId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by(Sort.Order.asc("eventTimestamp"), Sort.Order.asc("eventId")));
+        return repository.findByAccountId(accountId, pageable);
     }
 
     /**

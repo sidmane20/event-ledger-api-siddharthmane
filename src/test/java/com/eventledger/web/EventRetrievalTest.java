@@ -95,16 +95,18 @@ class EventRetrievalTest {
 
         mockMvc.perform(get("/events").param("account", "acct-1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0].eventId").value("evt-early"))
-                .andExpect(jsonPath("$[1].eventId").value("evt-mid"))
-                .andExpect(jsonPath("$[2].eventId").value("evt-late"));
+                .andExpect(jsonPath("$.content.length()").value(3))
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.content[0].eventId").value("evt-early"))
+                .andExpect(jsonPath("$.content[1].eventId").value("evt-mid"))
+                .andExpect(jsonPath("$.content[2].eventId").value("evt-late"));
     }
 
     @Test
-    void listByAccount_returnsEmptyList_forUnknownAccount() throws Exception {
+    void listByAccount_returnsEmptyPage_forUnknownAccount() throws Exception {
         mockMvc.perform(get("/events").param("account", "no-such-account"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 }
