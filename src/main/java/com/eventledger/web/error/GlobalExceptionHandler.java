@@ -4,6 +4,8 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -71,12 +73,30 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    /** A request to a path that maps to no endpoint (e.g. the root URL "/"). */
+    /** A request to a path that maps to no endpoint. */
     @ExceptionHandler(NoResourceFoundException.class)
     public ProblemDetail handleNoResource(NoResourceFoundException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.NOT_FOUND, "No endpoint found for the requested path.");
         problem.setTitle("Not found");
+        return problem;
+    }
+
+    /** Correct HTTP method, wrong verb for this path (e.g. PUT on /events). */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ProblemDetail handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.METHOD_NOT_ALLOWED, "HTTP method " + ex.getMethod() + " is not supported for this endpoint.");
+        problem.setTitle("Method not allowed");
+        return problem;
+    }
+
+    /** Request body in an unsupported content type (e.g. text/plain instead of application/json). */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ProblemDetail handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Content type is not supported; use application/json.");
+        problem.setTitle("Unsupported media type");
         return problem;
     }
 

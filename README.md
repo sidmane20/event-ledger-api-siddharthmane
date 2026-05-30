@@ -88,6 +88,13 @@ With the app running:
 
 The UI lets you try every endpoint from the browser.
 
+## Operational endpoints
+
+- **`GET /`** — a service-info document (name, version, status, and links to docs/health and the
+  available endpoints), so the root returns a helpful `200` rather than a bare error.
+- **`GET /actuator/health`** — health check for load balancers / container probes (`{"status":"UP"}`).
+- **`GET /actuator/info`** — basic application info.
+
 ## API reference
 
 Base URL: `http://localhost:8080`
@@ -200,7 +207,9 @@ curl -X POST http://localhost:8080/events \
 | Missing required field, zero/negative amount, >2 decimals, bad currency length | `400` |
 | Unknown `type`, malformed JSON, invalid timestamp | `400` |
 | Missing `account` query parameter on the listing endpoint | `400` |
-| Event id not found | `404` |
+| Event id not found, or request to an unmapped path | `404` |
+| Wrong HTTP method for a path (e.g. `PUT /events`) | `405` |
+| Unsupported request content type (not `application/json`) | `415` |
 
 ---
 

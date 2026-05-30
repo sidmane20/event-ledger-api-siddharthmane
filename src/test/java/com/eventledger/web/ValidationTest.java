@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -156,11 +157,24 @@ class ValidationTest {
 
     @Test
     void unmappedPath_returns404_not500() throws Exception {
-        mockMvc.perform(get("/"))
+        mockMvc.perform(get("/totally/unmapped/path"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.title").value("Not found"));
+    }
 
-        mockMvc.perform(get("/totally/unmapped/path"))
-                .andExpect(status().isNotFound());
+    @Test
+    void apiRoot_returns200_withServiceInfo() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Event Ledger API"))
+                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.endpoints.submitEvent").exists());
+    }
+
+    @Test
+    void wrongHttpMethod_returns405() throws Exception {
+        mockMvc.perform(put("/events").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.title").value("Method not allowed"));
     }
 }
