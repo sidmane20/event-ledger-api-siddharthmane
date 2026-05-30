@@ -1,0 +1,9 @@
+# Single-command local run: `docker compose up --build`
+# The app uses an embedded in-memory H2 database, so no database service is required.
+services:
+  event-ledger-api:
+    build: .
+    image: event-ledger-api:latest
+    container_name: event-ledger-api
+    ports:
+      - "8080:8080"

@@ -45,6 +45,17 @@ The API starts on **http://localhost:8080**. Stop it with `Ctrl+C`.
 
 > On Windows use `mvnw.cmd spring-boot:run`.
 
+### Or run with Docker
+
+A multi-stage `Dockerfile` and `docker-compose.yml` are included. With Docker installed:
+
+```bash
+docker compose up --build
+```
+
+This builds the jar and starts the API on **http://localhost:8080** — no JDK or Maven needed on the
+host, and (because the database is embedded) no database container. Stop with `Ctrl+C`.
+
 The in-memory database is recreated on every start, so the app always boots with an empty ledger.
 An H2 web console is available at http://localhost:8080/h2-console (JDBC URL
 `jdbc:h2:mem:eventledger`, user `sa`, no password) if you want to inspect the data.
