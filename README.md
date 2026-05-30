@@ -189,9 +189,12 @@ curl -X POST http://localhost:8080/events \
 
 ## Design decisions
 
-- **Idempotency by unique constraint.** `eventId` carries a unique constraint in the database.
-  Submission first looks the event up and returns the original on a repeat; the constraint is the
-  ultimate guard so a duplicate can never be persisted.
+- **Idempotency by unique constraint — concurrency-safe.** `eventId` carries a unique constraint in
+  the database. Submission first looks the event up and returns the original on a repeat. If two
+  requests for the same id race past that check simultaneously, both attempt the insert; the
+  constraint lets exactly one win and the loser's violation is caught and turned into a normal
+  "already exists" response. So simultaneous POSTs behave identically to sequential duplicates —
+  one row, balance unmoved (covered by a multithreaded test).
 - **Order-independent reads.** Listing relies on `ORDER BY eventTimestamp, eventId` (backed by a
   composite index), and the balance is a single SQL aggregate — neither depends on insertion order.
 - **Money as `BigDecimal`.** Amounts are never floating-point. Input is validated to at most two

@@ -4,6 +4,7 @@ import com.eventledger.domain.Event;
 import com.eventledger.repository.EventRepository;
 import com.eventledger.web.dto.CreateEventRequest;
 import com.eventledger.web.error.EventNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 /**
  * Application service for ingesting and recording ledger events.
@@ -26,19 +28,33 @@ public class EventService {
     }
 
     /**
-     * Idempotently records an event.
+     * Idempotently records an event, safely even under concurrent submissions of the same id.
      *
-     * <p>If an event with the same {@code eventId} already exists, the original is returned
-     * unchanged and nothing is written &mdash; so re-delivery of the same event never duplicates a
-     * row or moves the balance. Otherwise the event is persisted as new.
+     * <p>The fast path returns the original event if one already exists, so re-delivery never
+     * duplicates a row or moves the balance. When two requests for the same {@code eventId} race
+     * past that check at the same time, both attempt the insert; the database's unique constraint
+     * lets exactly one win, and the loser's {@link DataIntegrityViolationException} is translated
+     * into a normal "already exists" outcome by re-reading the winning row. The net effect is that
+     * simultaneous POSTs behave identically to sequential duplicates.
+     *
+     * <p>{@code saveAndFlush} forces the insert (and thus the constraint check) to happen here,
+     * inside this method's own transaction, rather than at a later commit where it could not be
+     * handled.
      *
      * @return the stored event together with whether this call created it
      */
-    @Transactional
     public SubmissionResult submit(CreateEventRequest request) {
-        return repository.findByEventId(request.eventId())
-                .map(existing -> new SubmissionResult(existing, false))
-                .orElseGet(() -> new SubmissionResult(repository.save(toEntity(request)), true));
+        Optional<Event> existing = repository.findByEventId(request.eventId());
+        if (existing.isPresent()) {
+            return new SubmissionResult(existing.get(), false);
+        }
+        try {
+            return new SubmissionResult(repository.saveAndFlush(toEntity(request)), true);
+        } catch (DataIntegrityViolationException race) {
+            // A concurrent request inserted the same eventId between our check and our insert.
+            Event winner = repository.findByEventId(request.eventId()).orElseThrow(() -> race);
+            return new SubmissionResult(winner, false);
+        }
     }
 
     /**
