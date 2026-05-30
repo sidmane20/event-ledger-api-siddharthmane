@@ -68,6 +68,12 @@ An H2 web console is available at http://localhost:8080/h2-console (JDBC URL
 ./mvnw test
 ```
 
+This is a standard Maven project, so if you have Maven installed you can equivalently run:
+
+```bash
+mvn test
+```
+
 The suite covers every required behaviour: idempotent duplicate submissions, out-of-order arrival,
 balance accuracy, and input validation / error cases.
 
