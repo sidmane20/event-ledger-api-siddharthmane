@@ -5,6 +5,8 @@ import com.eventledger.service.EventService.SubmissionResult;
 import com.eventledger.web.dto.CreateEventRequest;
 import com.eventledger.web.dto.EventResponse;
 import com.eventledger.web.dto.PagedEventsResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -26,6 +28,7 @@ import java.net.URI;
 @RestController
 @RequestMapping("/events")
 @Validated
+@Tag(name = "Events", description = "Submit and retrieve transaction events")
 public class EventController {
 
     /** Upper bound on page size, to keep responses bounded. */
@@ -44,6 +47,8 @@ public class EventController {
      * {@code eventId} yields {@code 200 OK} with the original event (no duplicate, balance
      * unchanged). Both responses carry a {@code Location} header pointing at the canonical event.
      */
+    @Operation(summary = "Submit a transaction event",
+            description = "Idempotent: a new eventId returns 201; a repeat returns 200 with the original event.")
     @PostMapping
     public ResponseEntity<EventResponse> submit(@Valid @RequestBody CreateEventRequest request) {
         SubmissionResult result = eventService.submit(request);
@@ -57,6 +62,7 @@ public class EventController {
     /**
      * Retrieve a single event by its id. Returns {@code 404 Not Found} if it does not exist.
      */
+    @Operation(summary = "Get a single event by id", description = "Returns 404 if no event has the id.")
     @GetMapping("/{eventId}")
     public EventResponse getById(@PathVariable String eventId) {
         return EventResponse.from(eventService.getByEventId(eventId));
@@ -67,6 +73,8 @@ public class EventController {
      * regardless of arrival order. Results are paginated via {@code page} (0-based) and {@code size};
      * an unknown account yields an empty page (not a 404).
      */
+    @Operation(summary = "List an account's events (paginated)",
+            description = "Always chronological by eventTimestamp; supports page/size.")
     @GetMapping
     public PagedEventsResponse listByAccount(
             @RequestParam("account") String accountId,

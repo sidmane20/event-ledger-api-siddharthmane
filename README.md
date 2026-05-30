@@ -62,6 +62,15 @@ balance accuracy, and input validation / error cases.
 
 ---
 
+## Interactive API docs (Swagger / OpenAPI)
+
+With the app running:
+
+- **Swagger UI:** http://localhost:8080/swagger-ui.html
+- **OpenAPI spec (JSON):** http://localhost:8080/v3/api-docs
+
+The UI lets you try every endpoint from the browser.
+
 ## API reference
 
 Base URL: `http://localhost:8080`
